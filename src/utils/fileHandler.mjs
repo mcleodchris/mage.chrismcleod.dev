@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 
 export function saveImage(imageFile, originalFileName) {
-  const tempDir = path.join(process.cwd(), "saved");
+  const saveDir = path.join(process.cwd(), process.env.SAVE_DIR || 'saved/');
   
   // Generate a unique filename for the image
   const filename = generateUniqueFilename(originalFileName);
   
   // Save the image to the temporary directory
-  const imagePath = path.join(tempDir, filename);
+  const imagePath = path.join(saveDir, filename);
   fs.copyFileSync(imageFile.path, imagePath);
   
   return imagePath;

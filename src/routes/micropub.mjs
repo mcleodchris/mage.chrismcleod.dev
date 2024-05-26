@@ -7,11 +7,11 @@ import { getImageData } from "../utils/imageList.mjs";
 
 const router = express.Router();
 const upload = multer({
-  dest: "temp/",
+  dest: process.env.TEMP_DIR || "temp/",
   limits: {
     fileSize: 150 * 1024 * 1024, // 150MB in bytes
   },
-});// This will save files to 'temp/' directory
+});
 
 const handleUpload = async (req, res) => {
   // Check if the request is authenticated
@@ -26,7 +26,7 @@ const handleUpload = async (req, res) => {
     return res.status(400).json({ message: "Invalid request" });
   }
 
-  const baseUrl = "https://assets.chrism.cloud/chrismcleod.dev/assets";
+  const baseUrl = process.env.BASE_URL || "http://localhost:3000/saved";
 
   const imagePath = saveImage(imageFile, imageFile.originalname);
   // delete the temporary file after saving it
@@ -54,15 +54,16 @@ const handleUpload = async (req, res) => {
 
   // load the file images.json. If it doesn't exist, initialise an empty array
   let images = [];
-  if (fs.existsSync("saved/images.json")) {
-    images = JSON.parse(fs.readFileSync("saved/images.json"));
+  const imageJsonFile = process.env.IMAGE_JSON_FILE || "saved/images.json";
+  if (fs.existsSync(imageJsonFile)) {
+    images = JSON.parse(fs.readFileSync(imageJsonFile, "utf8"));
   }
 
   // add the imageUrl and metadata to the images array
   images.push({ original: imageUrl, metadata });
 
   // save the images array to images.json
-  fs.writeFileSync("saved/images.json", JSON.stringify(images, null, 2));  
+  fs.writeFileSync(imageJsonFile, JSON.stringify(images, null, 2));  
 
 
   res.setHeader('Location', imageUrl);
