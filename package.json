@@ -1,7 +1,7 @@
 {
-  "name": "Mage",
+  "name": "mage-image-server",
   "version": "1.0.0",
-  "description": "A simple Node.js REST API",
+  "description": "A simple Node.js REST API for uploading and resizing images",
   "main": "src/app.mjs",
   "type": "module",
   "scripts": {
