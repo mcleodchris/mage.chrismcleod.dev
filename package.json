@@ -1,0 +1,19 @@
+{
+  "name": "Mage",
+  "version": "1.0.0",
+  "description": "A simple Node.js REST API",
+  "main": "src/app.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.mjs"
+  },
+  "dependencies": {
+    "@11ty/eleventy-img": "^4.0.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.17.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}
