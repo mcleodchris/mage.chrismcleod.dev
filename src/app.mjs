@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import micropubRouter from './routes/micropub.mjs';
 import imagesRouter from './routes/images.mjs';
 import { authenticate } from './middleware/auth.mjs';
+
 dotenv.config();
 
 const app = express();
