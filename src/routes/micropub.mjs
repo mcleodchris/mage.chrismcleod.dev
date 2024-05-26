@@ -1,13 +1,13 @@
 import express from "express";
 import multer from "multer";
-import fs from "fs";
+import { promises as fs } from "fs";
 import { saveImage } from "../utils/fileHandler.mjs";
-import { process } from "../utils/imageProcessor.mjs";
-import { getImageData } from "../utils/imageList.mjs";
+import { processImage } from "../utils/imageProcessor.mjs";
+import { getImageData, saveImageData } from "../utils/imageList.mjs";
 
 const router = express.Router();
 const upload = multer({
-  dest: process.env.TEMP_DIR || "temp/",
+  dest: process.env.TEMP_PATH || "temp/",
   limits: {
     fileSize: 150 * 1024 * 1024, // 150MB in bytes
   },
@@ -28,52 +28,30 @@ const handleUpload = async (req, res) => {
 
   const baseUrl = process.env.BASE_URL || "http://localhost:3000/saved";
 
-  const imagePath = saveImage(imageFile, imageFile.originalname);
+  const imagePath = await saveImage(imageFile, imageFile.originalname);
   // delete the temporary file after saving it
-  fs.unlinkSync(imageFile.path);
+  await fs.unlink(imageFile.path);
 
-  const metadata = await process(
+  const metadata = await processImage(
     imagePath,
     [320, 570, 820],
-    ["avif", "webp", "jpeg"]
+    ["avif", "webp", "jpeg"],
+    baseUrl
   );
-
-  for (const format in metadata) {
-    metadata[format].forEach((item) => {
-      item.url = `${baseUrl}/resized/${item.filename}`;
-      item.srcset = `${baseUrl}/resized/${item.filename} ${item.width}w`;
-      item.outputPath = `${baseUrl}/resized/${item.filename}`;
-    });
-  }
-
 
   //get the filename from imagePath
   const path = imagePath.split("/");
   const filename = path.pop();
   const imageUrl = `${baseUrl}/${filename}`;
 
-  // load the file images.json. If it doesn't exist, initialise an empty array
-  let images = [];
-  const imageJsonFile = process.env.IMAGE_JSON_FILE || "saved/images.json";
-  if (fs.existsSync(imageJsonFile)) {
-    images = JSON.parse(fs.readFileSync(imageJsonFile, "utf8"));
-  }
+  // save our image data to the master JSON file
+  await saveImageData({ original: imageUrl, metadata });
 
-  // add the imageUrl and metadata to the images array
-  images.push({ original: imageUrl, metadata });
-
-  // save the images array to images.json
-  fs.writeFileSync(imageJsonFile, JSON.stringify(images, null, 2));  
-
-
-  res.setHeader('Location', imageUrl);
+  res.setHeader("Location", imageUrl);
   return res.status(201).end();
 };
 
-// Use multer middleware for this route
-router.post("/media", upload.single("file"), handleUpload);
-
-router.get("/media", async (req, res) => {
+const getLastUploadedImage = async (req, res) => {
   // Check if the request is authenticated
   if (!req.authenticated) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -92,12 +70,17 @@ router.get("/media", async (req, res) => {
   } else {
     return res.status(400).json({ message: "Invalid request" });
   }
-});
+};
+
+// Use multer middleware for this route
+router.post("/media", upload.single("file"), handleUpload);
+
+router.get("/media", getLastUploadedImage);
 
 // Error handling middleware
 router.use((err, req, res, next) => {
-  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ message: 'File too large' });
+  if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "File too large" });
   }
   // handle other errors
 });

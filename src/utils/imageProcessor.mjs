@@ -18,15 +18,24 @@ function getFileName(id, src, width, format, options) {
  * @param {string} source - The source image path.
  * @param {number[]} sizes - An array of widths for resizing the image.
  * @param {string[]} formats - An array of formats for converting the image.
+ * @param {string} baseUrl - The base URL for the processed image.
  * @returns {Promise<Object>} - A promise that resolves to the metadata of the processed image.
  */
-export const process = async (source, sizes, formats) => {
+export const processImage = async (source, sizes, formats, baseUrl) => {
   const metadata = await Image(source, {
     widths: sizes,
     formats: formats,
-    outputDir: "saved/resized/",
+    outputDir: `${process.env.SAVE_PATH || "saved"}/resized`,
     filenameFormat: getFileName,
   });
+
+  for (const format in metadata) {
+    metadata[format].forEach((item) => {
+      item.url = `${baseUrl}/resized/${item.filename}`;
+      item.srcset = `${baseUrl}/resized/${item.filename} ${item.width}w`;
+      item.outputPath = `${baseUrl}/resized/${item.filename}`;
+    });
+  }
 
   return metadata;
 };

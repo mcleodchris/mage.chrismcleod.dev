@@ -2,7 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 
 export async function saveImage(imageFile, originalFileName) {
-  const saveDir = path.join(process.cwd(), process.env.SAVE_DIR || "saved/");
+  const saveDir = path.join(process.cwd(), process.env.SAVE_PATH || "saved/");
 
   // Generate a unique filename for the image
   const filename = generateUniqueFilename(originalFileName);
