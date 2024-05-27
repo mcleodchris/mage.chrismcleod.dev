@@ -1,11 +1,20 @@
+/**
+ * @fileoverview This file contains the image processing utility functions.
+ * @module utils/imageProcessor
+ */
+
 import Image from "@11ty/eleventy-img";
 
+/**
+ * Extracts the file name with the specified width and format.
+ * @param {string} id - The unique identifier (unused).
+ * @param {string} src - The original image path.
+ * @param {number} width - The current width in pixels.
+ * @param {string} format - The current file format.
+ * @param {Object} options - The Image plugin options (unused).
+ * @returns {string} - The file name with the specified width and format.
+ */
 function getFileName(id, src, width, format, options) {
-  // id: unique identifier (unused)
-  // src: original image path
-  // width: current width in px
-  // format: current file format
-  // options: Image plugin options (unused)
   const path = src.split("/");
   const filename = path.pop().split(".");
   const name = filename[0];

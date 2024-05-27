@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@11ty/eleventy-img": "^4.0.2",
+    "@azure/cosmos": "^4.0.0",
     "@azure/storage-blob": "^12.18.0",
     "dotenv": "^16.4.5",
     "express": "^4.17.1",
