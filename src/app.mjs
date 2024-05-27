@@ -7,6 +7,8 @@ import { authenticate } from './middleware/auth.mjs';
 dotenv.config();
 
 const app = express();
+// remove the x-powered-by header
+app.disable('x-powered-by');
 
 // Middleware
 app.use(express.json());
@@ -20,4 +22,9 @@ app.use('/images', imagesRouter)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+// gracefully handle shutdown
+process.on('SIGINT', () => {
+  console.info("Shutting down");
+  process.exit(0);
 });

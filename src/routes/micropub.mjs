@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import { saveImage } from "../utils/fileHandler.mjs";
 import { processImage } from "../utils/imageProcessor.mjs";
 import { getImageData, saveImageData } from "../utils/imageList.mjs";
+import { uploadToAzureBlobStorage } from "../utils/azureStorage.mjs";
 
 const router = express.Router();
 const upload = multer({
@@ -43,6 +44,21 @@ const handleUpload = async (req, res) => {
   const path = imagePath.split("/");
   const filename = path.pop();
   const imageUrl = `${baseUrl}/${filename}`;
+
+  const uploadPath = process.env.UPLOAD_PATH || "images/";
+
+  // upload to Azure Blob Storage
+  await uploadToAzureBlobStorage(imagePath, `${uploadPath}/${filename}`);
+  await fs.unlink(imagePath);
+
+  for (const format in metadata) {
+    for (const size of metadata[format]) {
+      await uploadToAzureBlobStorage(size.outputPath, `${uploadPath}/resized/${size.filename}`);
+      await fs.unlink(size.outputPath);
+    }
+  }
+
+
 
   // save our image data to the master JSON file
   await saveImageData({ original: imageUrl, metadata });

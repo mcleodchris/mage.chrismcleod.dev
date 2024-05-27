@@ -33,7 +33,6 @@ export const processImage = async (source, sizes, formats, baseUrl) => {
     metadata[format].forEach((item) => {
       item.url = `${baseUrl}/resized/${item.filename}`;
       item.srcset = `${baseUrl}/resized/${item.filename} ${item.width}w`;
-      item.outputPath = `${baseUrl}/resized/${item.filename}`;
     });
   }
 
