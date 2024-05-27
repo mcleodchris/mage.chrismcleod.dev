@@ -1,8 +1,21 @@
+/**
+ * Represents a utility module for interacting with Azure Blob Storage.
+ * @module azureStorage
+ */
 import { BlobServiceClient, StorageSharedKeyCredential, newPipeline } from "@azure/storage-blob";
 import { promises as fs } from "fs";
 
-// Add your Azure Storage Account's name and a shared key
+
+/**
+ * The Azure Storage account name.
+ * @type {string}
+ */
 const account = process.env.STORAGE_ACCOUNT || "your-account-name";
+
+/**
+ * The Azure Storage account key.
+ * @type {string}
+ */
 const accountKey = process.env.STORAGE_KEY || "your-account-key";
 
 // Create a new pipeline with the shared key credential
@@ -15,25 +28,23 @@ const blobServiceClient = new BlobServiceClient(
     pipeline
 );
 
-// Create a new container client
+/**
+ * The name of the container in Azure Blob Storage.
+ * @type {string}
+ */
 const containerName = process.env.CONTAINER_NAME || "images";
+
+// Create a new container client
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
-// Function to upload a file to Azure Blob Storage
+/**
+ * Uploads a file to Azure Blob Storage.
+ * @param {string} filePath - The path of the file to upload.
+ * @param {string} blobName - The name of the blob in Azure Blob Storage.
+ * @returns {Promise<void>} A promise that resolves when the upload is complete.
+ */
 export const uploadToAzureBlobStorage = async (filePath, blobName) => {
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     const data = await fs.readFile(filePath);
     await blockBlobClient.upload(data, data.length);
 };
-
-// // Now, you can use this function to upload your images
-// const imagePath = await saveImage(imageFile, imageFile.originalname);
-// await uploadToAzureBlobStorage(imagePath, imageFile.originalname);
-
-// // Similarly, upload the resized versions
-// for (let size of [320, 570, 820]) {
-//   for (let format of ["avif", "webp", "jpeg"]) {
-//     const resizedImagePath = `${imagePath}_${size}.${format}`;
-//     await uploadToAzureBlobStorage(resizedImagePath, `${imageFile.originalname}_${size}.${format}`);
-//   }
-// }

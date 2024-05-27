@@ -1,3 +1,8 @@
+/**
+ * @fileoverview This file contains the Micropub route handlers for uploading and retrieving images.
+ * @module routes/micropub
+ */
+
 import express from "express";
 import multer from "multer";
 import { promises as fs } from "fs";
@@ -14,6 +19,12 @@ const upload = multer({
   },
 });
 
+/**
+ * Handles the upload of an image file.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Object} The response object.
+ */
 const handleUpload = async (req, res) => {
   // Check if the request is authenticated
   if (!req.authenticated) {
@@ -58,8 +69,6 @@ const handleUpload = async (req, res) => {
     }
   }
 
-
-
   // save our image data to the master JSON file
   await saveImageData({ original: imageUrl, metadata });
 
@@ -67,6 +76,12 @@ const handleUpload = async (req, res) => {
   return res.status(201).end();
 };
 
+/**
+ * Retrieves the last uploaded image data.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Object} The response object.
+ */
 const getLastUploadedImage = async (req, res) => {
   // Check if the request is authenticated
   if (!req.authenticated) {
@@ -76,8 +91,8 @@ const getLastUploadedImage = async (req, res) => {
 
   if (q === "last") {
     const images = await getImageData();
-    // get the last entry from the images array
-    const lastEntry = images[images.length - 1];
+    // get the newest entry from the images array (should be the first one)
+    const lastEntry = images[0];
     if (lastEntry) {
       return res.json(lastEntry);
     } else {

@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/list", async (req, res) => {
   const images = await getImageData();
-  res.json(images.reverse());
+  res.json(images);
 });
 
 router.get("/image/:index", async (req, res) => {
