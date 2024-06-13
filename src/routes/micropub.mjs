@@ -19,6 +19,13 @@ const upload = multer({
   },
 });
 
+router.use((req, _, next) => {
+  req.container = req.database.container(
+    process.env.COSMOS_CONTAINER || "images"
+  );
+  next();
+});
+
 /**
  * Handles the upload of an image file.
  * @param {Object} req - The request object.
@@ -40,7 +47,7 @@ const handleUpload = async (req, res) => {
 
   const baseUrl = process.env.BASE_URL || "http://localhost:3000/saved";
 
-  const imagePath = await saveImage(imageFile, imageFile.originalname);
+  const imagePath = await saveImage(req.container, imageFile, imageFile.originalname);
   // delete the temporary file after saving it
   await fs.unlink(imageFile.path);
 
@@ -90,7 +97,7 @@ const getLastUploadedImage = async (req, res) => {
   const { q } = req.query;
 
   if (q === "last") {
-    const images = await getImageData();
+    const images = await getImageData(req.container);
     // get the newest entry from the images array (should be the first one)
     const lastEntry = images[0];
     if (lastEntry) {

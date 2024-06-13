@@ -1,17 +1,3 @@
-import dotenv from 'dotenv';
-import { CosmosClient } from "@azure/cosmos";
-
-dotenv.config();
-
-const connectionString = process.env.COSMOS_CONNECTION_STRING || "your-connection-string";
-
-// Create a new CosmosClient
-const client = new CosmosClient(connectionString);
-
-// Get a reference to the database and the container
-const database = client.database(process.env.COSMOS_DATABASE || "your-database");
-const container = database.container(process.env.COSMOS_CONTAINER || "your-container");
-
 /**
  * @typedef {Object} ImageObject
  * @property {string} original - The URL of the original image.
@@ -27,7 +13,7 @@ const container = database.container(process.env.COSMOS_CONTAINER || "your-conta
  * Retrieves image data from Azure Cosmos DB.
  * @returns {Promise<Array<ImageObject>>} A promise that resolves to an array of image data.
  */
-export const getImageData = async () => {
+export const getImageData = async (container) => {
   let images = [];
   try {
     // Query the container
@@ -48,7 +34,7 @@ export const getImageData = async () => {
  * @param {ImageObject} image - The image data to be saved.
  * @returns {Promise<void>} A promise that resolves when the image data is saved.
  */
-export const saveImageData = async (image) => {
+export const saveImageData = async (container, image) => {
   try {
     // Add the image data to the container
     const { resource: createdItem } = await container.items.create(image);
