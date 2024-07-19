@@ -4,18 +4,11 @@ import micropubRouter from "./routes/micropub.mjs";
 import imagesRouter from "./routes/images.mjs";
 import hobbyRouter from "./routes/hobby.mjs";
 import { authenticate } from "./middleware/auth.mjs";
-import { CosmosClient } from "@azure/cosmos";
+import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
+import { createStorageContainerClient } from "./utils/azureStorage.mjs";
+import log from "./utils/logger.mjs";
 
-dotenv.config();
-
-const connectionString =
-  process.env.COSMOS_CONNECTION_STRING || "your-connection-string";
-
-// Create a new CosmosClient
-const client = new CosmosClient(connectionString);
-
-// Get a reference to the database and the container
-const database = client.database(process.env.COSMOS_DATABASE || "your-database");
+const config = dotenv.config();
 
 const app = express();
 // remove the x-powered-by header
@@ -23,7 +16,15 @@ app.disable("x-powered-by");
 
 // Middleware
 app.use((req, _, next) => {
-  req.database = database;
+  req.database = createDatabaseConnection(
+    process.env.COSMOS_CONNECTION_STRING,
+    process.env.COSMOS_DATABASE
+  );
+  req.storageContainerClient = createStorageContainerClient(
+    process.env.STORAGE_ACCOUNT,
+    process.env.STORAGE_KEY,
+    process.env.CONTAINER_NAME
+  );
   next();
 });
 app.use(express.json());
@@ -36,11 +37,24 @@ app.use("/hobby", hobbyRouter);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
+
+/**
+ * Starts the server and listens on the specified port.
+ * @param {number} PORT - The port number to listen on.
+ */
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  // log the environment variables from config.parsed at debug level as KEY = value
+  if (process.env.NODE_ENV !== "production") {
+    Object.keys(config.parsed).forEach((key) => {
+      log.debug(`${key} = ${config.parsed[key]}`);
+    });
+  }
+
+  log.info(`Server is running on port ${PORT}`);
 });
+
 // gracefully handle shutdown
 process.on("SIGINT", () => {
-  console.info("Shutting down");
+  log.info("Shutting down");
   process.exit(0);
 });

@@ -10,6 +10,7 @@ import { saveImage } from "../utils/fileHandler.mjs";
 import { processImage } from "../utils/imageProcessor.mjs";
 import { getImageData, saveImageData } from "../utils/imageList.mjs";
 import { uploadToAzureBlobStorage } from "../utils/azureStorage.mjs";
+import log from "../utils/logger.mjs";
 
 const router = express.Router();
 const upload = multer({
@@ -32,9 +33,10 @@ router.use((req, _, next) => {
  * @param {Object} res - The response object.
  * @returns {Object} The response object.
  */
-const handleUpload = async (req, res) => {
+async function handleUpload(req, res) {
   // Check if the request is authenticated
   if (!req.authenticated) {
+    log.error("Unauthorised request");
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -42,14 +44,17 @@ const handleUpload = async (req, res) => {
   const imageFile = req.file;
 
   if (!imageFile) {
+    log.error("Invalid request");
     return res.status(400).json({ message: "Invalid request" });
   }
 
   const baseUrl = process.env.BASE_URL || "http://localhost:3000/saved";
 
-  const imagePath = await saveImage(req.container, imageFile, imageFile.originalname);
+  const imagePath = await saveImage(imageFile, imageFile.originalname);
+  log.info(`Image saved to ${imagePath}`);
   // delete the temporary file after saving it
   await fs.unlink(imageFile.path);
+  log.info(`Temporary file deleted: ${imageFile.path}`);
 
   const metadata = await processImage(
     imagePath,
@@ -57,6 +62,7 @@ const handleUpload = async (req, res) => {
     ["avif", "webp", "jpeg"],
     baseUrl
   );
+  log.info(`Image processed`);
 
   //get the filename from imagePath
   const path = imagePath.split("/");
@@ -66,22 +72,38 @@ const handleUpload = async (req, res) => {
   const uploadPath = process.env.UPLOAD_PATH || "images/";
 
   // upload to Azure Blob Storage
-  await uploadToAzureBlobStorage(imagePath, `${uploadPath}/${filename}`);
+  await uploadToAzureBlobStorage(
+    req.storageContainerClient,
+    imagePath,
+    `${uploadPath}/${filename}`
+  );
+  log.info(`Image uploaded to Azure Blob Storage`);
   await fs.unlink(imagePath);
+  log.info(`Local image deleted: ${imagePath}`);
 
   for (const format in metadata) {
     for (const size of metadata[format]) {
-      await uploadToAzureBlobStorage(size.outputPath, `${uploadPath}/resized/${size.filename}`);
+      await uploadToAzureBlobStorage(
+        req.storageContainerClient,
+        size.outputPath,
+        `${uploadPath}/resized/${size.filename}`
+      );
+      log.info(
+        `Resized image uploaded to Azure Blob Storage: ${format} :: ${size.width}`
+      );
+      // delete the resized image after uploading it
       await fs.unlink(size.outputPath);
     }
   }
 
-  // save our image data to the master JSON file
-  await saveImageData({ original: imageUrl, metadata });
+  // save our image data to the Cosmos DB
+  await saveImageData(req.container, { original: imageUrl, metadata });
+  log.info(`Image data saved to Cosmos DB`);
 
   res.setHeader("Location", imageUrl);
+  log.info(`Finished processing image: ${imageUrl}`);
   return res.status(201).end();
-};
+}
 
 /**
  * Retrieves the last uploaded image data.
@@ -89,7 +111,7 @@ const handleUpload = async (req, res) => {
  * @param {Object} res - The response object.
  * @returns {Object} The response object.
  */
-const getLastUploadedImage = async (req, res) => {
+async function getLastUploadedImage(req, res) {
   // Check if the request is authenticated
   if (!req.authenticated) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -108,7 +130,7 @@ const getLastUploadedImage = async (req, res) => {
   } else {
     return res.status(400).json({ message: "Invalid request" });
   }
-};
+}
 
 // Use multer middleware for this route
 router.post("/media", upload.single("file"), handleUpload);
