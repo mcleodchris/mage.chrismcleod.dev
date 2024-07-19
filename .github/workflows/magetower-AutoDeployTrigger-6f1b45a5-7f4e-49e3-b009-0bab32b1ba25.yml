@@ -8,6 +8,7 @@ on:
     paths:
       - "dockerfile/**"
       - ".github/workflows/magetower-AutoDeployTrigger-6f1b45a5-7f4e-49e3-b009-0bab32b1ba25.yml"
+      - "src/**"
 
   # Allow manual trigger
   workflow_dispatch:
