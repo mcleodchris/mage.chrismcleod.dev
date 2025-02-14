@@ -1,19 +1,27 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import micropubRouter from "./routes/micropub.mjs";
 import imagesRouter from "./routes/images.mjs";
 import hobbyRouter from "./routes/hobby.mjs";
+import publishRouter from "./routes/publish.mjs";
+import openaiRouter from "./routes/openai.mjs";
+import openapiRouter from "./routes/openapi.mjs";
 import { authenticate } from "./middleware/auth.mjs";
 import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
 import { createStorageContainerClient } from "./utils/azureStorage.mjs";
 import log from "./utils/logger.mjs";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./utils/swaggerSpec.mjs";
 
 const config = dotenv.config();
 
 const app = express();
 // remove the x-powered-by header
 app.disable("x-powered-by");
-
+// Enable CORS for localhost
+// Enable CORS for localhost
+app.use(cors({ origin: "http://localhost:8080" })); // Add this line
 // Middleware
 app.use((req, _, next) => {
   req.database = createDatabaseConnection(
@@ -28,12 +36,18 @@ app.use((req, _, next) => {
   next();
 });
 app.use(express.json());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/", openapiRouter);
+
 app.use(authenticate);
 
 // Routes
 app.use("/micropub", micropubRouter);
 app.use("/images", imagesRouter);
 app.use("/hobby", hobbyRouter);
+app.use("/publish", publishRouter);
+app.use("/openai", openaiRouter);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
