@@ -3,6 +3,7 @@ import { saveImage } from "./fileHandler.mjs";
 import { processImage } from "./imageProcessor.mjs";
 import { getImageData, saveImageData } from "./imageList.mjs";
 import { uploadToAzureBlobStorage } from "./azureStorage.mjs";
+import { extractExifData, extractPngMetadata } from "./exifExtractor.mjs";
 import log from "./logger.mjs";
 
 /**
@@ -36,11 +37,32 @@ export async function handleUpload(req, res) {
 
   const metadata = await processImage(
     imagePath,
-    [320, 570, 820],
+    [320, 570, 820, 650, 960, 1200],
     ["avif", "webp", "jpeg"],
     baseUrl
   );
   log.info(`Image processed`);
+
+  // Extract metadata if possible
+  let exifData = {};
+  let creationDate = new Date().toISOString();
+  try {
+    if (imageFile.mimetype === "image/jpeg") {
+      exifData = extractExifData(imagePath);
+      if (exifData.DateTimeOriginal) {
+        creationDate = new Date(exifData.DateTimeOriginal * 1000).toISOString();
+      }
+      log.info(`EXIF data extracted: ${JSON.stringify(exifData)}`);
+    } else if (imageFile.mimetype === "image/png") {
+      const pngMetadata = extractPngMetadata(imagePath);
+      if (pngMetadata.tEXt && pngMetadata.tEXt.creation_time) {
+        creationDate = new Date(pngMetadata.tEXt.creation_time).toISOString();
+      }
+      log.info(`PNG metadata extracted: ${JSON.stringify(pngMetadata)}`);
+    }
+  } catch (error) {
+    log.warn(`Failed to extract metadata: ${error.message}`);
+  }
 
   //get the filename from imagePath
   const path = imagePath.split("/");
@@ -75,7 +97,7 @@ export async function handleUpload(req, res) {
   }
 
   // save our image data to the Cosmos DB
-  await saveImageData(req.container, { original: imageUrl, metadata });
+  await saveImageData(req.container, { original: imageUrl, metadata, exifData, creationDate });
   log.info(`Image data saved to Cosmos DB`);
 
   res.setHeader("Location", imageUrl);
