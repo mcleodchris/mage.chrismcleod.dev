@@ -21,7 +21,7 @@ export const getImageData = async (container) => {
     // Query the container
     const querySpec = {
       query:
-        "SELECT c.id, c.original, c.metadata, c.createdAt FROM c ORDER BY c.createdAt DESC",
+        "SELECT c.id, c.original, c.metadata, c.createdAt, c.creationDate FROM c ORDER BY c.createdAt DESC",
     };
     const { resources: items } = await container.items
       .query(querySpec)
