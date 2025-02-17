@@ -40,6 +40,7 @@ app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/", openapiRouter);
+app.use("/photos", photosRouter);
 
 app.use(authenticate);
 
@@ -49,7 +50,6 @@ app.use("/images", imagesRouter);
 app.use("/hobby", hobbyRouter);
 app.use("/publish", publishRouter);
 app.use("/openai", openaiRouter);
-app.use("/photos", photosRouter);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
