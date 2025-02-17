@@ -7,6 +7,7 @@ import hobbyRouter from "./routes/hobby.mjs";
 import publishRouter from "./routes/publish.mjs";
 import openaiRouter from "./routes/openai.mjs";
 import openapiRouter from "./routes/openapi.mjs";
+import photosRouter from "./routes/photos.mjs";
 import { authenticate } from "./middleware/auth.mjs";
 import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
 import { createStorageContainerClient } from "./utils/azureStorage.mjs";
@@ -48,6 +49,7 @@ app.use("/images", imagesRouter);
 app.use("/hobby", hobbyRouter);
 app.use("/publish", publishRouter);
 app.use("/openai", openaiRouter);
+app.use("/photos", photosRouter);
 
 // Start the server
 const PORT = process.env.PORT || 3000;
