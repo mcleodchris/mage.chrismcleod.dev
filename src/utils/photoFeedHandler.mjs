@@ -2,6 +2,38 @@ import fetch from "node-fetch";
 import log from "./logger.mjs";
 
 /**
+ * Sends a webmention to Bridgy for syndication
+ * @param {string} sourceUrl - The URL of the source content
+ * @returns {Promise<boolean>} - Whether the webmention was successfully sent
+ */
+async function sendWebmention(sourceUrl) {
+  try {
+    const params = new URLSearchParams();
+    params.append('source', sourceUrl);
+    params.append('target', 'https://brid.gy/publish/mastodon');
+
+    const response = await fetch('https://brid.gy/publish/webmention', {
+      method: 'POST',
+      body: params,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    if (response.status === 201) {
+      log.info(`Successfully sent webmention for ${sourceUrl}`);
+      return true;
+    } else {
+      log.warn(`Failed to send webmention for ${sourceUrl}: ${response.status}`);
+      return false;
+    }
+  } catch (error) {
+    log.error(`Error sending webmention for ${sourceUrl}:`, error);
+    return false;
+  }
+}
+
+/**
  * Fetches and processes the JSON Feed from chrismcleod.photos
  * @param {Container} container - The CosmosDB container client
  * @returns {Promise<Array>} - Array of processed items
@@ -23,7 +55,9 @@ export async function processPhotoFeed(container) {
           id: item.id,
           datePublished: item.date_published,
           type: "photo",
-          source: "chrismcleod.photos"
+          source: "chrismcleod.photos",
+          url: item.url,
+          webmentionSent: false
         };
 
         // Check if item already exists
@@ -35,6 +69,10 @@ export async function processPhotoFeed(container) {
           .fetchAll();
 
         if (resources.length === 0) {
+          // Send webmention before saving to database
+          const webmentionSent = await sendWebmention(item.url);
+          crosspostData.webmentionSent = webmentionSent;
+          
           await container.items.create(crosspostData);
           log.info(`Created new crosspost entry for photo ${item.id}`);
           return crosspostData;
