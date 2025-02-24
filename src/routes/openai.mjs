@@ -77,6 +77,10 @@ If there is text found in the image, do your best to transcribe the important bi
 
 If there is no text found in the image, then there is no need to mention it.
 
+Always use British English spelling when not directly transcribing text from the image.
+
+Your output must be safe to include directly as an HTML attribute, so, for example, use “ and ” instead of ".
+
 You should not begin the description with any variation of “The image”.`,
             },
           ],
