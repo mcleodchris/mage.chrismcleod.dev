@@ -5,6 +5,7 @@ import { getImageData, saveImageData } from "./imageList.mjs";
 import { uploadToAzureBlobStorage } from "./azureStorage.mjs";
 import { extractExifData, extractPngMetadata } from "./exifExtractor.mjs";
 import log from "./logger.mjs";
+import { uploadToBunnyStorage } from "./bunnyStorage.mjs";
 
 /**
  * Handles the upload of an image file.
@@ -45,7 +46,7 @@ export async function handleUpload(req, res) {
   formats.forEach((format, idx) => {
     metadata[format] = metadataResults[idx][format];
   });
-  
+
   log.info(`Image processed`);
 
   // Extract metadata if possible
@@ -76,26 +77,42 @@ export async function handleUpload(req, res) {
 
   const uploadPath = process.env.UPLOAD_PATH || "images/";
 
-  // upload to Azure Blob Storage
-  await uploadToAzureBlobStorage(
-    req.storageContainerClient,
+  // upload to Bunny
+  await uploadToBunnyStorage(
+    req.bunnyStorageConfig,
     imagePath,
     `${uploadPath}/${filename}`
   );
+  log.info(`Image uploaded to Bunny Storage: ${imageUrl}`);
+  // // upload to Azure Blob Storage
+  // await uploadToAzureBlobStorage(
+  //   req.storageContainerClient,
+  //   imagePath,
+  //   `${uploadPath}/${filename}`
+  // );
   log.info(`Image uploaded to Azure Blob Storage`);
   await fs.unlink(imagePath);
   log.info(`Local image deleted: ${imagePath}`);
 
   for (const format in metadata) {
     for (const size of metadata[format]) {
-      await uploadToAzureBlobStorage(
-        req.storageContainerClient,
+      // upload resized images to Bunny Storage
+      await uploadToBunnyStorage(
+        req.bunnyStorageConfig,
         size.outputPath,
         `${uploadPath}/resized/${size.filename}`
       );
       log.info(
-        `Resized image uploaded to Azure Blob Storage: ${format} :: ${size.width}`
+        `Resized image uploaded to Bunny Storage: ${format} :: ${size.width}`
       );
+      // await uploadToAzureBlobStorage(
+      //   req.storageContainerClient,
+      //   size.outputPath,
+      //   `${uploadPath}/resized/${size.filename}`
+      // );
+      // log.info(
+      //   `Resized image uploaded to Azure Blob Storage: ${format} :: ${size.width}`
+      // );
       // delete the resized image after uploading it
       await fs.unlink(size.outputPath);
     }
