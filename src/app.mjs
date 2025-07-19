@@ -14,6 +14,7 @@ import { createStorageContainerClient } from "./utils/azureStorage.mjs";
 import log from "./utils/logger.mjs";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./utils/swaggerSpec.mjs";
+import { createBunnyStorageConfig } from "./utils/bunnyStorage.mjs";
 
 const config = dotenv.config();
 
@@ -34,6 +35,10 @@ app.use((req, _, next) => {
     process.env.STORAGE_KEY,
     process.env.CONTAINER_NAME
   );
+  req.bunnyStorageConfig = createBunnyStorageConfig(
+    process.env.BUNNY_REGION,
+    process.env.BUNNY_CONTAINER,
+    process.env.BUNNY_ACCESS_KEY);
   next();
 });
 app.use(express.json());
