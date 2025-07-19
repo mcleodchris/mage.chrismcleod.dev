@@ -35,12 +35,17 @@ export async function handleUpload(req, res) {
   await fs.unlink(imageFile.path);
   log.info(`Temporary file deleted: ${imageFile.path}`);
 
-  const metadata = await processImage(
-    imagePath,
-    [320, 570, 820, 650, 960, 1200],
-    ["avif", "webp", "jpeg"],
-    baseUrl
+  const sizes = [320, 570, 820, 650, 960, 1200];
+  const formats = ["avif", "webp", "jpeg"];
+  const metadataResults = await Promise.all(
+    formats.map((format) => processImage(imagePath, sizes, [format], baseUrl))
   );
+  // Merge metadataResults into a single metadata object
+  const metadata = {};
+  formats.forEach((format, idx) => {
+    metadata[format] = metadataResults[idx][format];
+  });
+  
   log.info(`Image processed`);
 
   // Extract metadata if possible
@@ -97,7 +102,12 @@ export async function handleUpload(req, res) {
   }
 
   // save our image data to the Cosmos DB
-  await saveImageData(req.container, { original: imageUrl, metadata, exifData, creationDate });
+  await saveImageData(req.container, {
+    original: imageUrl,
+    metadata,
+    exifData,
+    creationDate,
+  });
   log.info(`Image data saved to Cosmos DB`);
 
   res.setHeader("Location", imageUrl);
