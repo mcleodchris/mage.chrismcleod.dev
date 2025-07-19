@@ -36,9 +36,10 @@ app.use((req, _, next) => {
     process.env.CONTAINER_NAME
   );
   req.bunnyStorageConfig = createBunnyStorageConfig(
-    process.env.BUNNY_REGION,
     process.env.BUNNY_CONTAINER,
-    process.env.BUNNY_ACCESS_KEY);
+    process.env.BUNNY_ACCESS_KEY,
+    process.env.BUNNY_REGION
+  );
   next();
 });
 app.use(express.json());
