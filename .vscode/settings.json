@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  },
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true
+  }
+}
