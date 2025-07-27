@@ -1,5 +1,6 @@
-import express from "express";
 import dotenv from "dotenv";
+const config = dotenv.config();
+import express from "express";
 import cors from "cors";
 import micropubRouter from "./routes/micropub.mjs";
 import imagesRouter from "./routes/images.mjs";
@@ -16,12 +17,9 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./utils/swaggerSpec.mjs";
 import { createBunnyStorageConfig } from "./utils/bunnyStorage.mjs";
 
-const config = dotenv.config();
-
 const app = express();
 // remove the x-powered-by header
 app.disable("x-powered-by");
-// Enable CORS for localhost
 // Enable CORS for localhost
 app.use(cors({ origin: "http://localhost:8080" })); // Add this line
 // Middleware
@@ -30,11 +28,11 @@ app.use((req, _, next) => {
     process.env.COSMOS_CONNECTION_STRING,
     process.env.COSMOS_DATABASE
   );
-  req.storageContainerClient = createStorageContainerClient(
-    process.env.STORAGE_ACCOUNT,
-    process.env.STORAGE_KEY,
-    process.env.CONTAINER_NAME
-  );
+  // req.storageContainerClient = createStorageContainerClient(
+  //   process.env.STORAGE_ACCOUNT,
+  //   process.env.STORAGE_KEY,
+  //   process.env.CONTAINER_NAME
+  // );
   req.bunnyStorageConfig = createBunnyStorageConfig(
     process.env.BUNNY_CONTAINER,
     process.env.BUNNY_ACCESS_KEY,
