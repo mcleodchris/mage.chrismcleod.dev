@@ -1,28 +1,37 @@
 import dotenv from "dotenv";
+
 const config = dotenv.config();
-import express from "express";
+
 import cors from "cors";
-import micropubRouter from "./routes/micropub.mjs";
-import imagesRouter from "./routes/images.mjs";
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import { authenticate } from "./middleware/auth.mjs";
 import hobbyRouter from "./routes/hobby.mjs";
-import publishRouter from "./routes/publish.mjs";
+import imagesRouter from "./routes/images.mjs";
+import micropubRouter from "./routes/micropub.mjs";
 import openaiRouter from "./routes/openai.mjs";
 import openapiRouter from "./routes/openapi.mjs";
 import photosRouter from "./routes/photos.mjs";
-import { authenticate } from "./middleware/auth.mjs";
-import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
+import publishRouter from "./routes/publish.mjs";
 import { createStorageContainerClient } from "./utils/azureStorage.mjs";
-import log from "./utils/logger.mjs";
-import swaggerUi from "swagger-ui-express";
-import swaggerSpec from "./utils/swaggerSpec.mjs";
 import { createBunnyStorageConfig } from "./utils/bunnyStorage.mjs";
+import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
+import log from "./utils/logger.mjs";
+import swaggerSpec from "./utils/swaggerSpec.mjs";
 
 const app = express();
 // remove the x-powered-by header
 app.disable("x-powered-by");
 // Enable CORS for localhost
-app.use(cors({ origin: "http://localhost:8080" })); // Add this line
+app.use(cors({ origin: "http://localhost:8080" }));
 // Middleware
+
+// Middleware to log requests
+app.use((req, res, next) => {
+  log.info(`${req.method} ${req.url}`);
+  next();
+});
+
 app.use((req, _, next) => {
   req.database = createDatabaseConnection(
     process.env.COSMOS_CONNECTION_STRING,
