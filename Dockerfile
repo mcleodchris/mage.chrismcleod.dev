@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as the base image
-FROM node:22-alpine3.22
+FROM node:24-alpine3.22
 
 WORKDIR /usr/src/app
 
