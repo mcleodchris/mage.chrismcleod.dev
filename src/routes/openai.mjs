@@ -64,7 +64,7 @@ router.post("/generate-alt-text", async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-mini",
       messages: [
         {
           role: "developer",
@@ -79,7 +79,7 @@ If there is no text found in the image, then there is no need to mention it.
 
 Always use British English spelling when not directly transcribing text from the image.
 
-Your output must be safe to include directly as an HTML attribute, so, for example, use “ and ” instead of ".
+Your output must be safe to include directly as an HTML attribute, so, for example, NEVER use", but “ and ” instead.
 
 You should not begin the description with any variation of “The image”.`,
             },
