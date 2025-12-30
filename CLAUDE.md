@@ -23,6 +23,42 @@ docker run -p 3000:3000 --env-file .env mage  # Run container
 
 **Note:** No test suite currently exists in this project.
 
+### Continuous Integration
+
+**GitHub Actions Workflow:** `.github/workflows/docker-build-push.yml`
+
+Automatically builds and pushes Docker images to Docker Hub on every push to `develop` branch.
+
+**Image Tags:**
+- `mrkapowski/magetower:latest` - Latest build from develop (tracked by Watchtower)
+- `mrkapowski/magetower:sha-abc1234` - Specific commit version for rollback
+
+**Setup Requirements:**
+1. Configure GitHub Secrets (Settings → Secrets and variables → Actions):
+   - `DOCKERHUB_USERNAME` - Docker Hub username
+   - `DOCKERHUB_TOKEN` - Docker Hub Personal Access Token
+2. Push to `develop` branch triggers automatic build
+3. Check Actions tab for build status
+
+**Watchtower Integration:**
+Deploy with Watchtower to auto-update on new builds:
+```bash
+docker run -d \
+  --name watchtower \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  containrrr/watchtower \
+  --interval 300 \
+  mrkapowski/magetower:latest
+```
+
+**Manual Rollback (if needed):**
+```bash
+# Roll back to specific commit
+docker pull mrkapowski/magetower:sha-e34407d
+docker stop mage
+docker run -d --name mage -p 3000:3000 --env-file .env mrkapowski/magetower:sha-e34407d
+```
+
 ## Environment Configuration
 
 Required environment variables (see `.env` template):
