@@ -35,3 +35,47 @@ export const createHobbyEntry = async (container, entryData) => {
   const { resource } = await container.items.create(entry);
   return resource;
 };
+
+/**
+ * Updates an existing hobby log entry in Cosmos DB
+ * @param {Object} container - Cosmos DB container
+ * @param {string} id - Entry ID to update
+ * @param {Object} updateData - Fields to update
+ * @returns {Promise<Object>} The updated entry
+ */
+export const updateHobbyEntry = async (container, id, updateData) => {
+  const { resource: existing } = await container.item(id, id).read();
+
+  if (!existing) {
+    throw new Error("Entry not found");
+  }
+
+  const updated = {
+    ...existing,
+    ...updateData,
+    id,
+    createdAt: existing.createdAt,
+  };
+
+  if (updateData.modelCount) {
+    updated.modelCount = parseInt(updateData.modelCount, 10);
+  }
+
+  if (updateData.completedDate) {
+    updated.completedDate = updateData.completedDate;
+    updated.year = new Date(updateData.completedDate).getFullYear();
+  }
+
+  const { resource } = await container.item(id, id).replace(updated);
+  return resource;
+};
+
+/**
+ * Deletes a hobby log entry from Cosmos DB
+ * @param {Object} container - Cosmos DB container
+ * @param {string} id - Entry ID to delete
+ * @returns {Promise<void>}
+ */
+export const deleteHobbyEntry = async (container, id) => {
+  await container.item(id, id).delete();
+};
