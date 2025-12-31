@@ -1,13 +1,17 @@
 import express from "express";
 import dotenv from "dotenv";
+import { Octokit } from "octokit";
 import {
   getHobbyData,
   createHobbyEntry,
   updateHobbyEntry,
   deleteHobbyEntry,
+  triggerWorkflowDispatch,
 } from "../utils/hobbyData.mjs";
 import log from "../utils/logger.mjs";
 dotenv.config();
+
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 const router = express.Router();
 
@@ -29,7 +33,8 @@ router.post("/", async (req, res) => {
 
     if (!item || !game || !modelCount) {
       return res.status(400).json({
-        error: "Missing required fields: item, game, and modelCount are required",
+        error:
+          "Missing required fields: item, game, and modelCount are required",
       });
     }
 
@@ -81,13 +86,32 @@ router.delete("/:id", async (req, res) => {
 
     log.info(`Deleted hobby entry: ${id}`);
 
-    res.status(204).send();
+    // Trigger GitHub workflow dispatch (matching Azure Function behavior)
+    try {
+      await triggerWorkflowDispatch(octokit, {
+        owner: process.env.GITHUB_OWNER,
+        repo: process.env.MICROPUB_REPO,
+        eventType: "function_trigger",
+        clientPayload: {
+          action: "delete",
+          entryId: id,
+        },
+      });
+      log.info(`Triggered GitHub workflow dispatch for deleted entry: ${id}`);
+    } catch (dispatchError) {
+      log.warn(`Failed to trigger workflow dispatch: ${dispatchError.message}`);
+    }
+
+    res.status(204).end();
   } catch (error) {
-    if (error.code === 404) {
+    if (error.code === 404 || error.statusCode === 404) {
       return res.status(404).json({ error: "Entry not found" });
     }
     log.error("Error deleting hobby entry:", error);
-    res.status(500).json({ error: "Failed to delete hobby entry" });
+    res.status(500).json({
+      error: "Failed to delete hobby entry",
+      details: error.message,
+    });
   }
 });
 

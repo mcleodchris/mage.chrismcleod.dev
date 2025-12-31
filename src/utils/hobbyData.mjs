@@ -79,3 +79,23 @@ export const updateHobbyEntry = async (container, id, updateData) => {
 export const deleteHobbyEntry = async (container, id) => {
   await container.item(id, id).delete();
 };
+
+/**
+ * Triggers GitHub workflow dispatch to rebuild site after hobby data changes
+ * @param {Object} octokit - Octokit instance
+ * @param {Object} options - Dispatch options
+ * @returns {Promise<void>}
+ */
+export const triggerWorkflowDispatch = async (octokit, options = {}) => {
+  const { owner, repo, eventType = 'function_trigger', clientPayload = {} } = options;
+
+  await octokit.request('POST /repos/{owner}/{repo}/dispatches', {
+    owner,
+    repo,
+    event_type: eventType,
+    client_payload: clientPayload,
+    headers: {
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  });
+};
