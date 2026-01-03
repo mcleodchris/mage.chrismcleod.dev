@@ -24,7 +24,7 @@ const app = express();
 // remove the x-powered-by header
 app.disable("x-powered-by");
 // Enable CORS for localhost
-app.use(cors({ origin: "http://localhost:8080" }));
+app.use(cors({ origin: ["http://localhost:8080", "http://localhost:5173"] }));
 // Middleware
 
 // Middleware to log requests
