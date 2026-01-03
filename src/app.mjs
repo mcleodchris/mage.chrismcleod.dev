@@ -6,6 +6,7 @@ import cors from "cors";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { authenticate } from "./middleware/auth.mjs";
+import authcheckRouter from "./routes/authcheck.mjs";
 import hobbyRouter from "./routes/hobby.mjs";
 import imagesRouter from "./routes/images.mjs";
 import micropubRouter from "./routes/micropub.mjs";
@@ -54,6 +55,7 @@ app.use(express.json());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/", openapiRouter);
 app.use("/photos", photosRouter);
+app.use("/authcheck", authcheckRouter);
 
 app.use(authenticate);
 
