@@ -1,12 +1,14 @@
 {
   "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
-    "source.fixAll": "always"
+    "source.fixAll.biome": "explicit"
   },
   "chat.instructionsFilesLocations": {
     ".github/instructions": true
   },
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
-  "editor.detectIndentation": false
+  "editor.detectIndentation": false,
+  "eslint.format.enable": false
 }
