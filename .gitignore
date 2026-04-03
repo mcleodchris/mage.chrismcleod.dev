@@ -1,5 +1,6 @@
 .env
 .env.*
+.depinator
 # Ignore node_modules
 node_modules/
 
@@ -8,4 +9,3 @@ node_modules/
 /saved/*
 !/temp/.*
 !/saved/.*
-package.json
