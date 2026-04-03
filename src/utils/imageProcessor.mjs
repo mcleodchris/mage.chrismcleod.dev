@@ -14,12 +14,12 @@ import Image from "@11ty/eleventy-img";
  * @param {Object} options - The Image plugin options (unused).
  * @returns {string} - The file name with the specified width and format.
  */
-function getFileName(id, src, width, format, options) {
-  const path = src.split("/");
-  const filename = path.pop().split(".");
-  const name = filename[0];
+function getFileName(_id, src, width, format, _options) {
+    const path = src.split("/");
+    const filename = path.pop().split(".");
+    const name = filename[0];
 
-  return `${name}-${width}.${format}`;
+    return `${name}-${width}.${format}`;
 }
 
 /**
@@ -31,19 +31,19 @@ function getFileName(id, src, width, format, options) {
  * @returns {Promise<Object>} - A promise that resolves to the metadata of the processed image.
  */
 export const processImage = async (source, sizes, formats, baseUrl) => {
-  const metadata = await Image(source, {
-    widths: sizes,
-    formats: formats,
-    outputDir: `${process.env.SAVE_PATH || "saved"}/resized`,
-    filenameFormat: getFileName,
-  });
-
-  for (const format in metadata) {
-    metadata[format].forEach((item) => {
-      item.url = `${baseUrl}/resized/${item.filename}`;
-      item.srcset = `${baseUrl}/resized/${item.filename} ${item.width}w`;
+    const metadata = await Image(source, {
+        widths: sizes,
+        formats: formats,
+        outputDir: `${process.env.SAVE_PATH || "saved"}/resized`,
+        filenameFormat: getFileName,
     });
-  }
 
-  return metadata;
+    for (const format in metadata) {
+        metadata[format].forEach((item) => {
+            item.url = `${baseUrl}/resized/${item.filename}`;
+            item.srcset = `${baseUrl}/resized/${item.filename} ${item.width}w`;
+        });
+    }
+
+    return metadata;
 };

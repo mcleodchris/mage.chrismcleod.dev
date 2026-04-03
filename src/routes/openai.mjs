@@ -56,22 +56,22 @@ const openai = new OpenAI();
  *                   example: "Failed to generate alt text"
  */
 router.post("/generate-alt-text", async (req, res) => {
-  const { imageUrl } = req.body;
+    const { imageUrl } = req.body;
 
-  if (!imageUrl) {
-    return res.status(400).json({ error: "Image URL is required" });
-  }
+    if (!imageUrl) {
+        return res.status(400).json({ error: "Image URL is required" });
+    }
 
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-5-mini",
-      messages: [
-        {
-          role: "developer",
-          content: [
-            {
-              type: "text",
-              text: `Please provide a functional, objective description of the provided image in no more than around 50 words so that someone who could not see it would be able to imagine it. If possible, follow an “object-action-context” framework. The object is the main focus. The action describes what’s happening, usually what the object is doing. The context describes the surrounding environment.
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-5-mini",
+            messages: [
+                {
+                    role: "developer",
+                    content: [
+                        {
+                            type: "text",
+                            text: `Please provide a functional, objective description of the provided image in no more than around 50 words so that someone who could not see it would be able to imagine it. If possible, follow an “object-action-context” framework. The object is the main focus. The action describes what’s happening, usually what the object is doing. The context describes the surrounding environment.
 
 If there is text found in the image, do your best to transcribe the important bits, even if it extends the word count beyond 50 words.
 
@@ -82,29 +82,29 @@ Always use British English spelling when not directly transcribing text from the
 Your output must be safe to include directly as an HTML attribute, so, for example, NEVER use", but “ and ” instead.
 
 You should not begin the description with any variation of “The image”.`,
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "describe this image" },
-            {
-              type: "image_url",
-              image_url: { url: imageUrl },
-            },
-          ],
-        },
-      ],
-      store: true,
-    });
+                        },
+                    ],
+                },
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: "describe this image" },
+                        {
+                            type: "image_url",
+                            image_url: { url: imageUrl },
+                        },
+                    ],
+                },
+            ],
+            store: true,
+        });
 
-    const altText = response.choices[0].message.content;
-    res.json({ altText });
-  } catch (error) {
-    log.error("Error generating alt text:", error);
-    res.status(500).json({ error: "Failed to generate alt text" });
-  }
+        const altText = response.choices[0].message.content;
+        res.json({ altText });
+    } catch (error) {
+        log.error("Error generating alt text:", error);
+        res.status(500).json({ error: "Failed to generate alt text" });
+    }
 });
 
 export default router;

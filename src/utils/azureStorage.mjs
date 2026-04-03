@@ -2,9 +2,9 @@
  * Represents a utility module for interacting with Azure Blob Storage.
  * @module azureStorage
  */
-import { Container } from "@azure/cosmos";
-import { BlobServiceClient, StorageSharedKeyCredential, newPipeline } from "@azure/storage-blob";
-import { promises as fs } from "fs";
+
+import { promises as fs } from "node:fs";
+import { BlobServiceClient, newPipeline, StorageSharedKeyCredential } from "@azure/storage-blob";
 import log from "./logger.mjs";
 
 /**
@@ -39,18 +39,21 @@ export function createStorageContainerClient(storageAccount, storageKey, contain
 
     // Create a new pipeline with the shared key credential
     const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
-    log.debug(`azureStorage/createStorageContainerClient:: sharedKeyCredential = ${JSON.stringify(sharedKeyCredential)}`);
+    log.debug(
+        `azureStorage/createStorageContainerClient:: sharedKeyCredential = ${JSON.stringify(sharedKeyCredential)}`,
+    );
     const pipeline = newPipeline(sharedKeyCredential);
 
     // Create a new BlobServiceClient
     const blobServiceClient = new BlobServiceClient(
         `https://${account}.blob.core.windows.net`,
-        pipeline
+        pipeline,
     );
-    log.info("azureStorage/createStorageContainerClient:: Created Storage Blob Service Client")
+    log.info("azureStorage/createStorageContainerClient:: Created Storage Blob Service Client");
 
     // Create a new container client
     const containerClient = blobServiceClient.getContainerClient(containerName || "images");
-    log.info("azureStorage/createStorageContainerClient:: Created Storage Container Client")
+    log.info("azureStorage/createStorageContainerClient:: Created Storage Container Client");
+    log.info("azureStorage/createStorageContainerClient:: Created Storage Container Client");
     return containerClient;
 }

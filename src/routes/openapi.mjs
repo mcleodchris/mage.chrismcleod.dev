@@ -3,9 +3,8 @@ import swaggerSpec from "../utils/swaggerSpec.mjs";
 
 const router = express.Router();
 
-
-router.get("/openapi.json", (req, res) => {
-  res.json(swaggerSpec);
+router.get("/openapi.json", (_, res) => {
+    res.json(swaggerSpec);
 });
 
 export default router;

@@ -1,5 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { v4 as uuid } from "uuid";
 
 const saveDir = path.join(process.cwd(), process.env.SAVE_PATH || "saved/");
@@ -10,12 +10,12 @@ const saveDir = path.join(process.cwd(), process.env.SAVE_PATH || "saved/");
  * @returns {string} The unique filename.
  */
 function generateUniqueFilename(originalFileName) {
-  // Get the file extension from the original file name
-  const fileExtension = path.extname(originalFileName);
+    // Get the file extension from the original file name
+    const fileExtension = path.extname(originalFileName);
 
-  // Generate a unique filename using uuid
-  const uniqueName = uuid();
-  return `${uniqueName}${fileExtension}`;
+    // Generate a unique filename using uuid
+    const uniqueName = uuid();
+    return `${uniqueName}${fileExtension}`;
 }
 
 /**
@@ -26,18 +26,16 @@ function generateUniqueFilename(originalFileName) {
  * @throws {Error} If there is an error saving the image.
  */
 export async function saveImage(imageFile, originalFileName) {
-  try {
-    const filename = generateUniqueFilename(originalFileName);
+    try {
+        const filename = generateUniqueFilename(originalFileName);
 
-    // Save the image from the temporary directory
-    const imagePath = path.join(saveDir, filename);
-    await fs.copyFile(imageFile.path, imagePath);
+        // Save the image from the temporary directory
+        const imagePath = path.join(saveDir, filename);
+        await fs.copyFile(imageFile.path, imagePath);
 
-    return imagePath;
-  } catch (error) {
-    console.error(`Failed to save image: ${error}`);
-    throw error; // re-throw the error so it can be handled by the caller
-  }
+        return imagePath;
+    } catch (error) {
+        console.error(`Failed to save image: ${error}`);
+        throw error; // re-throw the error so it can be handled by the caller
+    }
 }
-
-

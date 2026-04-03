@@ -1,11 +1,11 @@
-import express from "express";
 import dotenv from "dotenv";
+import express from "express";
 import { Octokit } from "octokit";
-import { createContentTemplate } from "../utils/templates.mjs";
-import log from "../utils/logger.mjs";
 import slugify from "slugify";
+import log from "../utils/logger.mjs";
+import { createContentTemplate } from "../utils/templates.mjs";
 
-const config = dotenv.config();
+const _config = dotenv.config();
 
 const router = express.Router();
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
@@ -23,16 +23,17 @@ const paths = {
  * @returns {string} - The generated filename.
  */
 function generateFilename(type, data) {
-  switch (type) {
-    case "blog":
-      const date = new Date(data.frontmatter.date).toISOString().split("T")[0];
-      const slug = slugify(data.frontmatter.title, { lower: true });
-      return `${date}-${slug}.md`;
-    case "photo":
-      return `${data.frontmatter.id}.md`;
-    default:
-      return `${Date.now()}.md`;
-  }
+    switch (type) {
+        case "blog": {
+            const date = new Date(data.frontmatter.date).toISOString().split("T")[0];
+            const slug = slugify(data.frontmatter.title, { lower: true });
+            return `${date}-${slug}.md`;
+        }
+        case "photo":
+            return `${data.frontmatter.id}.md`;
+        default:
+            return `${Date.now()}.md`;
+    }
 }
 
 /**
@@ -79,30 +80,30 @@ function generateFilename(type, data) {
  *                   example: "Failed to create content"
  */
 router.post("/", async (req, res) => {
-  const { type, data } = req.body;
+    const { type, data } = req.body;
 
-  try {
-    const content = createContentTemplate(type, data);
-    const filename = generateFilename(type, data);
-    const path = `${paths[type]}${filename}`;
+    try {
+        const content = createContentTemplate(type, data);
+        const filename = generateFilename(type, data);
+        const path = `${paths[type]}${filename}`;
 
-    await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}',{
-      owner: process.env.GITHUB_OWNER,
-      repo: process.env.GITHUB_REPO,
-      path,
-      committer: {
-        name: process.env.GITHUB_NAME,
-        email: process.env.GITHUB_EMAIL,
-      },
-      message: `Create new ${type} content`,
-      content: Buffer.from(content).toString("base64"),
-    });
+        await octokit.request("PUT /repos/{owner}/{repo}/contents/{path}", {
+            owner: process.env.GITHUB_OWNER,
+            repo: process.env.GITHUB_REPO,
+            path,
+            committer: {
+                name: process.env.GITHUB_NAME,
+                email: process.env.GITHUB_EMAIL,
+            },
+            message: `Create new ${type} content`,
+            content: Buffer.from(content).toString("base64"),
+        });
 
-    res.status(201).send({ message: "Content created successfully" });
-  } catch (error) {
-    log.error("Error creating content:", error);
-    res.status(500).send({ error: "Failed to create content" });
-  }
+        res.status(201).send({ message: "Content created successfully" });
+    } catch (error) {
+        log.error("Error creating content:", error);
+        res.status(500).send({ error: "Failed to create content" });
+    }
 });
 
 export default router;

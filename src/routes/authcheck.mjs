@@ -9,20 +9,20 @@ const router = express.Router();
  * @returns {{ valid: boolean }}
  */
 router.post("/", (req, res) => {
-  const authHeader = req.headers.authorization;
-  const bodySecret = req.body?.secret;
+    const authHeader = req.headers.authorization;
+    const bodySecret = req.body?.secret;
 
-  let providedSecret = null;
+    let providedSecret = null;
 
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    providedSecret = authHeader.split(" ")[1];
-  } else if (bodySecret) {
-    providedSecret = bodySecret;
-  }
+    if (authHeader?.startsWith("Bearer ")) {
+        providedSecret = authHeader.split(" ")[1];
+    } else if (bodySecret) {
+        providedSecret = bodySecret;
+    }
 
-  const isValid = providedSecret === process.env.SHARED_SECRET;
+    const isValid = providedSecret === process.env.SHARED_SECRET;
 
-  res.json({ valid: isValid });
+    res.json({ valid: isValid });
 });
 
 export default router;

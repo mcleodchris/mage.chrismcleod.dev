@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 import exifParser from "exif-parser";
 import pngMetadata from "png-metadata";
 
@@ -8,10 +8,10 @@ import pngMetadata from "png-metadata";
  * @returns {object} - The extracted EXIF data.
  */
 export function extractExifData(imagePath) {
-  const buffer = fs.readFileSync(imagePath);
-  const parser = exifParser.create(buffer);
-  const result = parser.parse();
-  return result.tags;
+    const buffer = fs.readFileSync(imagePath);
+    const parser = exifParser.create(buffer);
+    const result = parser.parse();
+    return result.tags;
 }
 
 /**
@@ -20,7 +20,7 @@ export function extractExifData(imagePath) {
  * @returns {object} - The extracted metadata.
  */
 export function extractPngMetadata(imagePath) {
-  const buffer = fs.readFileSync(imagePath);
-  const metadata = pngMetadata.read(buffer);
-  return metadata;
+    const buffer = fs.readFileSync(imagePath);
+    const metadata = pngMetadata.read(buffer);
+    return metadata;
 }

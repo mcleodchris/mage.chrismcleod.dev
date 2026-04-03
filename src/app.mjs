@@ -14,7 +14,6 @@ import openaiRouter from "./routes/openai.mjs";
 import openapiRouter from "./routes/openapi.mjs";
 import photosRouter from "./routes/photos.mjs";
 import publishRouter from "./routes/publish.mjs";
-import { createStorageContainerClient } from "./utils/azureStorage.mjs";
 import { createBunnyStorageConfig } from "./utils/bunnyStorage.mjs";
 import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
 import log from "./utils/logger.mjs";
@@ -25,38 +24,38 @@ const app = express();
 app.disable("x-powered-by");
 // Enable CORS for localhost
 app.use(
-  cors({
-    origin: [
-      "http://localhost:8080",
-      "http://localhost:5173",
-      "https://dash.home.chrismcleod.cloud",
-    ],
-  })
+    cors({
+        origin: [
+            "http://localhost:8080",
+            "http://localhost:5173",
+            "https://dash.home.chrismcleod.cloud",
+        ],
+    }),
 );
 // Middleware
 
 // Middleware to log requests
-app.use((req, res, next) => {
-  log.info(`${req.method} ${req.url}`);
-  next();
+app.use((req, _, next) => {
+    log.info(`${req.method} ${req.url}`);
+    next();
 });
 
 app.use((req, _, next) => {
-  req.database = createDatabaseConnection(
-    process.env.COSMOS_CONNECTION_STRING,
-    process.env.COSMOS_DATABASE
-  );
-  // req.storageContainerClient = createStorageContainerClient(
-  //   process.env.STORAGE_ACCOUNT,
-  //   process.env.STORAGE_KEY,
-  //   process.env.CONTAINER_NAME
-  // );
-  req.bunnyStorageConfig = createBunnyStorageConfig(
-    process.env.BUNNY_CONTAINER,
-    process.env.BUNNY_ACCESS_KEY,
-    process.env.BUNNY_REGION
-  );
-  next();
+    req.database = createDatabaseConnection(
+        process.env.COSMOS_CONNECTION_STRING,
+        process.env.COSMOS_DATABASE,
+    );
+    // req.storageContainerClient = createStorageContainerClient(
+    //   process.env.STORAGE_ACCOUNT,
+    //   process.env.STORAGE_KEY,
+    //   process.env.CONTAINER_NAME
+    // );
+    req.bunnyStorageConfig = createBunnyStorageConfig(
+        process.env.BUNNY_CONTAINER,
+        process.env.BUNNY_ACCESS_KEY,
+        process.env.BUNNY_REGION,
+    );
+    next();
 });
 app.use(express.json());
 
@@ -82,18 +81,18 @@ const PORT = process.env.PORT || 3000;
  * @param {number} PORT - The port number to listen on.
  */
 app.listen(PORT, () => {
-  // log the environment variables from config.parsed at debug level as KEY = value
-  if (process.env.NODE_ENV !== "production") {
-    Object.keys(config.parsed).forEach((key) => {
-      log.debug(`${key} = ${config.parsed[key]}`);
-    });
-  }
+    // log the environment variables from config.parsed at debug level as KEY = value
+    if (process.env.NODE_ENV !== "production") {
+        Object.keys(config.parsed).forEach((key) => {
+            log.debug(`${key} = ${config.parsed[key]}`);
+        });
+    }
 
-  log.info(`Server is running on port ${PORT}`);
+    log.info(`Server is running on port ${PORT}`);
 });
 
 // gracefully handle shutdown
 process.on("SIGINT", () => {
-  log.info("Shutting down");
-  process.exit(0);
+    log.info("Shutting down");
+    process.exit(0);
 });

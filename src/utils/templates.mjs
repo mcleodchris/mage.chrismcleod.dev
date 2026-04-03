@@ -1,5 +1,5 @@
-import { stringify } from 'yaml';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import { stringify } from "yaml";
 
 /**
  * Creates a content template based on the type and data provided.
@@ -7,8 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
  * @param {object} data - The data to include in the content.
  * @returns {string} - The generated content.
  */
-export function createContentTemplate(type, data) {
-    let { frontmatter, content } = data;
+export function createContentTemplate(_type, data) {
+    const { frontmatter, content } = data;
 
     if (!frontmatter.id) {
         frontmatter.id = uuidv4();

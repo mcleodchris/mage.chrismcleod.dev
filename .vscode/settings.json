@@ -5,5 +5,8 @@
   },
   "chat.instructionsFilesLocations": {
     ".github/instructions": true
-  }
+  },
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false
 }

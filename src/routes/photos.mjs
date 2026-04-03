@@ -5,10 +5,8 @@ import log from "../utils/logger.mjs";
 const router = express.Router();
 
 router.use((req, _, next) => {
-  req.container = req.database.container(
-    process.env.CROSSPOST_CONTAINER || "crosspost"
-  );
-  next();
+    req.container = req.database.container(process.env.CROSSPOST_CONTAINER || "crosspost");
+    next();
 });
 
 /**
@@ -49,16 +47,16 @@ router.use((req, _, next) => {
  *                   example: "Failed to process feed"
  */
 router.post("/webhook", async (req, res) => {
-  try {
-    const processedItems = await processPhotoFeed(req.container);
-    res.json({
-      message: "Feed processed successfully",
-      processedItems
-    });
-  } catch (error) {
-    log.error("Error in photo webhook handler:", error);
-    res.status(500).json({ error: "Failed to process feed" });
-  }
+    try {
+        const processedItems = await processPhotoFeed(req.container);
+        res.json({
+            message: "Feed processed successfully",
+            processedItems,
+        });
+    } catch (error) {
+        log.error("Error in photo webhook handler:", error);
+        res.status(500).json({ error: "Failed to process feed" });
+    }
 });
 
-export default router; 
+export default router;

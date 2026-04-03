@@ -2,8 +2,8 @@
  * Utility module for interacting with Bunny.net Storage API.
  * @module bunnyStorage
  */
-import { createReadStream } from "fs";
-import https from "https";
+import { createReadStream } from "node:fs";
+import https from "node:https";
 import log from "./logger.mjs";
 
 /**

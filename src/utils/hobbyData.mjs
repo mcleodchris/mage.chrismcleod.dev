@@ -1,17 +1,15 @@
 export const getHobbyData = async (container) => {
-  let entries = [];
-  try {
-    const querySpec = {
-      query: "SELECT * FROM c ORDER BY c.createdAt DESC",
-    };
-    const { resources: items } = await container.items
-      .query(querySpec)
-      .fetchAll();
-    entries = items;
-  } catch (error) {
-    console.error(error);
-  }
-  return entries;
+    let entries = [];
+    try {
+        const querySpec = {
+            query: "SELECT * FROM c ORDER BY c.createdAt DESC",
+        };
+        const { resources: items } = await container.items.query(querySpec).fetchAll();
+        entries = items;
+    } catch (error) {
+        console.error(error);
+    }
+    return entries;
 };
 
 /**
@@ -21,19 +19,19 @@ export const getHobbyData = async (container) => {
  * @returns {Promise<Object>} The created entry with id and metadata
  */
 export const createHobbyEntry = async (container, entryData) => {
-  const now = new Date().toISOString();
-  const entry = {
-    id: crypto.randomUUID(),
-    item: entryData.item,
-    game: entryData.game,
-    modelCount: parseInt(entryData.modelCount, 10),
-    completedDate: entryData.completedDate || now,
-    createdAt: now,
-    year: new Date(entryData.completedDate || now).getFullYear(),
-  };
+    const now = new Date().toISOString();
+    const entry = {
+        id: crypto.randomUUID(),
+        item: entryData.item,
+        game: entryData.game,
+        modelCount: parseInt(entryData.modelCount, 10),
+        completedDate: entryData.completedDate || now,
+        createdAt: now,
+        year: new Date(entryData.completedDate || now).getFullYear(),
+    };
 
-  const { resource } = await container.items.create(entry);
-  return resource;
+    const { resource } = await container.items.create(entry);
+    return resource;
 };
 
 /**
@@ -44,30 +42,30 @@ export const createHobbyEntry = async (container, entryData) => {
  * @returns {Promise<Object>} The updated entry
  */
 export const updateHobbyEntry = async (container, id, updateData) => {
-  const { resource: existing } = await container.item(id, id).read();
+    const { resource: existing } = await container.item(id, id).read();
 
-  if (!existing) {
-    throw new Error("Entry not found");
-  }
+    if (!existing) {
+        throw new Error("Entry not found");
+    }
 
-  const updated = {
-    ...existing,
-    ...updateData,
-    id,
-    createdAt: existing.createdAt,
-  };
+    const updated = {
+        ...existing,
+        ...updateData,
+        id,
+        createdAt: existing.createdAt,
+    };
 
-  if (updateData.modelCount) {
-    updated.modelCount = parseInt(updateData.modelCount, 10);
-  }
+    if (updateData.modelCount) {
+        updated.modelCount = parseInt(updateData.modelCount, 10);
+    }
 
-  if (updateData.completedDate) {
-    updated.completedDate = updateData.completedDate;
-    updated.year = new Date(updateData.completedDate).getFullYear();
-  }
+    if (updateData.completedDate) {
+        updated.completedDate = updateData.completedDate;
+        updated.year = new Date(updateData.completedDate).getFullYear();
+    }
 
-  const { resource } = await container.item(id, id).replace(updated);
-  return resource;
+    const { resource } = await container.item(id, id).replace(updated);
+    return resource;
 };
 
 /**
@@ -77,7 +75,7 @@ export const updateHobbyEntry = async (container, id, updateData) => {
  * @returns {Promise<void>}
  */
 export const deleteHobbyEntry = async (container, id) => {
-  await container.item(id, id).delete();
+    await container.item(id, id).delete();
 };
 
 /**
@@ -87,15 +85,15 @@ export const deleteHobbyEntry = async (container, id) => {
  * @returns {Promise<void>}
  */
 export const triggerWorkflowDispatch = async (octokit, options = {}) => {
-  const { owner, repo, eventType = 'function_trigger', clientPayload = {} } = options;
+    const { owner, repo, eventType = "function_trigger", clientPayload = {} } = options;
 
-  await octokit.request('POST /repos/{owner}/{repo}/dispatches', {
-    owner,
-    repo,
-    event_type: eventType,
-    client_payload: clientPayload,
-    headers: {
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
-  });
+    await octokit.request("POST /repos/{owner}/{repo}/dispatches", {
+        owner,
+        repo,
+        event_type: eventType,
+        client_payload: clientPayload,
+        headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    });
 };
