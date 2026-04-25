@@ -8,6 +8,7 @@ import express from "express";
 import multer from "multer";
 import { Octokit } from "octokit";
 import { micropubAuth } from "../middleware/micropubAuth.mjs";
+import log from "../utils/logger.mjs";
 import { getLastUploadedImage, handleUpload } from "../utils/micropubHandlers.mjs";
 import { generateMicropubMarkdown } from "../utils/micropubMarkdown.mjs";
 
