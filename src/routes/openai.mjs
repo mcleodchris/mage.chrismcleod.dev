@@ -1,6 +1,10 @@
 import express from "express";
 import OpenAI from "openai";
 import log from "../utils/logger.mjs";
+import { imagePrompts } from "../utils/prompts.mjs";
+
+const FETCH_TIMEOUT_MS = 10_000;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
 const router = express.Router();
 
@@ -52,7 +56,7 @@ const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "imageBase64 is required"
+ *                   example: "Image URL is required"
  *       500:
  *         description: Internal server error
  *         content:
@@ -71,14 +75,37 @@ router.post("/generate-alt-text", async (req, res) => {
         return res.status(400).json({ error: "Image URL is required" });
     }
 
+    try {
+        const parsed = new URL(imageUrl);
+        if (parsed.protocol !== "https:") {
+            return res.status(400).json({ error: "Image URL must use HTTPS" });
+        }
+    } catch {
+        return res.status(400).json({ error: "Image URL is invalid" });
+    }
+
     let dataUri;
     try {
-        const imageResponse = await fetch(imageUrl);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+        let imageResponse;
+        try {
+            imageResponse = await fetch(imageUrl, { signal: controller.signal });
+        } finally {
+            clearTimeout(timeout);
+        }
         if (!imageResponse.ok) {
-            return res.status(400).json({ error: "Failed to fetch image" });
+            return res.status(502).json({ error: "Failed to fetch image from remote host" });
+        }
+        const contentLength = imageResponse.headers.get("content-length");
+        if (contentLength && parseInt(contentLength, 10) > MAX_IMAGE_BYTES) {
+            return res.status(400).json({ error: "Image exceeds maximum allowed size" });
         }
         const mimeType = imageResponse.headers.get("content-type") ?? "image/jpeg";
         const buffer = await imageResponse.arrayBuffer();
+        if (buffer.byteLength > MAX_IMAGE_BYTES) {
+            return res.status(400).json({ error: "Image exceeds maximum allowed size" });
+        }
         const base64 = Buffer.from(buffer).toString("base64");
         dataUri = `data:${mimeType};base64,${base64}`;
     } catch (error) {
@@ -95,15 +122,7 @@ router.post("/generate-alt-text", async (req, res) => {
                     content: [
                         {
                             type: "text",
-                            text: `Please provide a functional, objective description of the provided image for use as accessibility alt-text when the image is used online, in no more than around 50-80 words so that someone who could not see it would be able to imagine it. If possible, follow an "object-action-context" framework. The object is the main focus. The action describes what's happening, usually what the object is doing. The context describes the surrounding environment.
-If there is text found in the image, do your best to transcribe the important bits, even if it extends the word count beyond 80 words.
-If there is no text found in the image, then there is no need to mention it.
-Always use British English spelling when not directly transcribing text from the image.
-Your output must be safe to include directly as an HTML attribute, so, for example, NEVER use ".
-You should not begin the description with any variation of "The image", nor word the description as "the object... the action... the context...", as that is awkward to read.
-Return only the description text, with no preamble, labels, or surrounding markup.
-If any detail is unclear or uncertain, omit it rather than guessing.
-Before finalising, check that the response is objective, evocative, uses British English where applicable, avoids unsafe straight double quotes, and stays within the length guidance unless needed to include important transcribed text.`,
+                            text: imagePrompts.altText,
                         },
                     ],
                 },
@@ -121,7 +140,11 @@ Before finalising, check that the response is objective, evocative, uses British
             store: false,
         });
 
-        const altText = response.choices[0].message.content;
+        const altText = response.choices?.[0]?.message?.content;
+        if (!altText) {
+            log.error("OpenAI returned no content in choices");
+            return res.status(500).json({ error: "Failed to generate alt text" });
+        }
         res.json({ altText });
     } catch (error) {
         log.error("Error generating alt text:", error);
