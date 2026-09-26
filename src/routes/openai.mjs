@@ -15,11 +15,24 @@ router.use((req, _, next) => {
     next();
 });
 
-const openaiConfig = { apiKey: process.env.OPENAI_API_KEY };
-if (process.env.OPENAI_BASE_URL) {
-    openaiConfig.baseURL = process.env.OPENAI_BASE_URL;
+/**
+ * Builds the OpenAI client on first use and caches it.
+ *
+ * Constructing at module scope threw during import when OPENAI_API_KEY was
+ * unset, taking down every route in the app rather than just this one.
+ * @returns {OpenAI}
+ */
+let openaiClient;
+function getOpenAIClient() {
+    if (!openaiClient) {
+        const config = { apiKey: process.env.OPENAI_API_KEY };
+        if (process.env.OPENAI_BASE_URL) {
+            config.baseURL = process.env.OPENAI_BASE_URL;
+        }
+        openaiClient = new OpenAI(config);
+    }
+    return openaiClient;
 }
-const openai = new OpenAI(openaiConfig);
 
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
@@ -254,7 +267,7 @@ router.post("/generate-alt-text", async (req, res) => {
     }
 
     try {
-        const response = await openai.responses.create({
+        const response = await getOpenAIClient().responses.create({
             model: MODEL,
             instructions: imagePrompts.altText,
             input: [

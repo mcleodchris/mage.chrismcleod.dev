@@ -1,14 +1,15 @@
-import express from "express";
 import dotenv from "dotenv";
+import express from "express";
 import { Octokit } from "octokit";
 import {
-    getHobbyData,
     createHobbyEntry,
-    updateHobbyEntry,
     deleteHobbyEntry,
+    getHobbyData,
     triggerWorkflowDispatch,
+    updateHobbyEntry,
 } from "../utils/hobbyData.mjs";
 import log from "../utils/logger.mjs";
+
 dotenv.config();
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
