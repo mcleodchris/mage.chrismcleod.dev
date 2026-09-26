@@ -1,6 +1,6 @@
 import express from "express";
-import { processPhotoFeed } from "../utils/photoFeedHandler.mjs";
 import log from "../utils/logger.mjs";
+import { processPhotoFeed } from "../utils/photoFeedHandler.mjs";
 
 const router = express.Router();
 

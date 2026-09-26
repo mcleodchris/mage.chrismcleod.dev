@@ -1,42 +1,60 @@
 // import fetch from "node-fetch";
 import log from "./logger.mjs";
 
-const targets = ["https://brid.gy/publish/mastodon", "https://brid.gy/publish/bluesky"];
+// Bridgy exposes one publish endpoint per silo. The keys are recorded per-item so a
+// partial syndication (one silo accepted, another rejected) stays visible.
+const targets = {
+    mastodon: "https://brid.gy/publish/mastodon",
+    bluesky: "https://brid.gy/publish/bluesky",
+};
+
+/** @returns {Record<string, boolean>} every target marked unsent */
+function noTargetsSent() {
+    return Object.fromEntries(Object.keys(targets).map((name) => [name, false]));
+}
 
 /**
  * Sends a webmention to Bridgy for syndication
  * @param {string} sourceUrl - The URL of the source content
- * @returns {Promise<boolean>} - Whether the webmention was successfully sent
+ * @returns {Promise<Record<string, boolean>>} - Per-target acceptance, keyed by silo
  */
 async function sendWebmention(sourceUrl) {
-    try {
-        targets.forEach(async (target) => {
+    const results = await Promise.all(
+        Object.entries(targets).map(async ([name, target]) => {
             const params = new URLSearchParams();
             params.append("source", sourceUrl);
             params.append("target", target);
 
-            const response = await fetch("https://brid.gy/publish/webmention", {
-                method: "POST",
-                body: params,
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            });
+            try {
+                const response = await fetch("https://brid.gy/publish/webmention", {
+                    method: "POST",
+                    body: params,
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                });
 
-            if (response.status === 201) {
-                log.info(`Successfully sent webmention for ${sourceUrl} to ${target}`);
-            } else {
+                // Bridgy answers 201 for a fresh syndication and 200 when the post was
+                // already published, so both mean there is nothing left to do.
+                if (response.ok) {
+                    log.info(`Successfully sent webmention for ${sourceUrl} to ${target}`);
+                    return [name, true];
+                }
+
+                // Bridgy explains the rejection in the body, not the status line.
+                const body = await response.text().catch(() => "<unreadable body>");
                 log.warn(
-                    `Failed to send webmention for ${sourceUrl} to ${target}: ${response.status}`,
+                    `Failed to send webmention for ${sourceUrl} to ${target}: ${response.status} ${body}`,
                 );
+                return [name, false];
+            } catch (error) {
+                log.error(`Error sending webmention for ${sourceUrl} to ${target}:`, error);
+                return [name, false];
             }
-        });
+        }),
+    );
 
-        return true;
-    } catch (error) {
-        log.error(`Error sending webmention for ${sourceUrl}:`, error);
-        return false;
-    }
+    return Object.fromEntries(results);
 }
 
 /**
@@ -63,7 +81,7 @@ export async function processPhotoFeed(container) {
                     type: "photo",
                     source: "chrismcleod.photos",
                     url: item.url,
-                    webmentionSent: false,
+                    webmentionSent: noTargetsSent(),
                 };
 
                 // Check if item already exists
