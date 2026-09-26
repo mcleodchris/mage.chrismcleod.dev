@@ -16,7 +16,7 @@ import photosRouter from "./routes/photos.mjs";
 import publishRouter from "./routes/publish.mjs";
 import { createBunnyStorageConfig } from "./utils/bunnyStorage.mjs";
 import { createDatabaseConnection } from "./utils/cosmosDb.mjs";
-import log from "./utils/logger.mjs";
+import log, { describeError } from "./utils/logger.mjs";
 import swaggerSpec from "./utils/swaggerSpec.mjs";
 
 const app = express();
@@ -72,6 +72,17 @@ app.use("/images", imagesRouter);
 app.use("/hobby", hobbyRouter);
 app.use("/publish", publishRouter);
 app.use("/openai", openaiRouter);
+
+// Last-resort handler: without this, thrown route errors and malformed JSON
+// bodies are swallowed by express's default handler and never reach Winston.
+app.use((err, req, res, _next) => {
+    const status = err.status ?? err.statusCode ?? 500;
+    log.error(`Unhandled error on ${req.method} ${req.url} -> ${status} ${describeError(err)}`);
+    if (res.headersSent) return;
+    res.status(status).json({
+        error: status === 400 ? (err.message ?? "Bad request") : "Internal server error",
+    });
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;

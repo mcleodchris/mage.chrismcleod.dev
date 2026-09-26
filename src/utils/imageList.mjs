@@ -32,6 +32,27 @@ export const getImageData = async (container) => {
 };
 
 /**
+ * Finds the image record matching a URL, whether that URL is the original
+ * upload or one of the generated derivatives.
+ * @param {import("@azure/cosmos").Container} container
+ * @param {string} url - The image URL to match exactly.
+ * @returns {Promise<ImageObject|null>} The matching record, or null if none.
+ */
+export const findImageByUrl = async (container, url) => {
+    const querySpec = {
+        query: `SELECT c.id, c.original, c.metadata, c.createdAt, c.creationDate FROM c
+                WHERE c.original = @url
+                   OR EXISTS(SELECT VALUE m FROM m IN c.metadata.jpeg WHERE m.url = @url)
+                   OR EXISTS(SELECT VALUE m FROM m IN c.metadata.webp WHERE m.url = @url)
+                   OR EXISTS(SELECT VALUE m FROM m IN c.metadata.avif WHERE m.url = @url)
+                OFFSET 0 LIMIT 1`,
+        parameters: [{ name: "@url", value: url }],
+    };
+    const { resources: items } = await container.items.query(querySpec).fetchAll();
+    return items[0] ?? null;
+};
+
+/**
  * Saves image data to Cosmos DB container.
  * @param {ImageObject} image - The image data to be saved.
  * @returns {Promise<void>} A promise that resolves when the image data is saved.
