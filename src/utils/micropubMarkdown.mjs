@@ -67,19 +67,19 @@ export function generateMicropubMarkdown(micropub, postType, options = {}) {
         log.debug(`[MicropubMarkdown] Note content: ${content}`);
     } else if (postType === "bookmark") {
         fileDir = "bookmarks";
-        frontmatter.bookmark_of = micropub.properties["bookmark-of"]?.[0] || "";
+        frontmatter.bookmarkOf = micropub.properties["bookmark-of"]?.[0] || "";
         frontmatter.tags = micropub.properties.category || [];
         frontmatter.name = micropub.properties.name?.[0] || "";
         content = micropub.properties.content?.[0] || "";
         log.debug(
-            `[MicropubMarkdown] Bookmark content: ${content}, bookmark_of: ${frontmatter.bookmark_of}`,
+            `[MicropubMarkdown] Bookmark content: ${content}, bookmarkOf: ${frontmatter.bookmarkOf}`,
         );
     } else if (postType === "like") {
         fileDir = "likes";
-        frontmatter.like_of = micropub.properties["like-of"]?.[0] || "";
+        frontmatter.likeOf = micropub.properties["like-of"]?.[0] || "";
         frontmatter.tags = micropub.properties.category || [];
         content = micropub.properties.content?.[0] || "";
-        log.debug(`[MicropubMarkdown] Like content: ${content}, like_of: ${frontmatter.like_of}`);
+        log.debug(`[MicropubMarkdown] Like content: ${content}, likeOf: ${frontmatter.likeOf}`);
     }
     // YAML frontmatter
     // Helper to convert JS object to nested YAML
